@@ -1,0 +1,29 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "npm run build",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/[...route]"
+    },
+    {
+      "source": "/",
+      "destination": "/api/[...route]"
+    },
+    {
+      "source": "/login",
+      "destination": "/api/[...route]"
+    },
+    {
+      "source": "/logout",
+      "destination": "/api/[...route]"
+    }
+  ],
+  "functions": {
+    "api/[...route].js": {
+      "maxDuration": 300,
+      "includeFiles": "{public/**,templates/**}"
+    }
+  }
+}

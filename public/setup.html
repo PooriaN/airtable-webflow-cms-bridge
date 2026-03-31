@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMS Bridge Setup</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface-2: #1c1c26;
+      --border: #2a2a3a;
+      --text: #e4e4ef;
+      --text-dim: #9a9ab3;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --radius: 14px;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.12), transparent 24%),
+        linear-gradient(180deg, #08080d 0%, #101019 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 32px auto 64px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .panel {
+      background: rgba(19, 19, 26, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card {
+      padding: 32px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(99, 102, 241, 0.12);
+      color: #c7d2fe;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 18px 0 12px;
+      font-size: clamp(34px, 5vw, 52px);
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+    }
+
+    h1 span { color: var(--accent); }
+
+    .hero p,
+    .status-summary p,
+    .field-help,
+    .database-note,
+    .mode-note,
+    .hint {
+      color: var(--text-dim);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .status-summary {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .status-grid,
+    .cards {
+      display: grid;
+      gap: 16px;
+    }
+
+    .status-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-bottom: 24px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .status-pill.ok {
+      background: rgba(34, 197, 94, 0.14);
+      color: #86efac;
+    }
+
+    .status-pill.warn {
+      background: rgba(245, 158, 11, 0.14);
+      color: #fcd34d;
+    }
+
+    .status-card,
+    .database-card,
+    .field-card,
+    .snippet-card {
+      padding: 22px;
+    }
+
+    .status-card h2,
+    .database-card h2,
+    .snippet-card h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .status-card .row,
+    .field-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .field-card {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+      background: var(--surface-2);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .chip.required {
+      color: #fde68a;
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 12px 14px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    textarea {
+      min-height: 260px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      line-height: 1.5;
+    }
+
+    .field-actions,
+    .top-actions,
+    .snippet-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button,
+    .ghost-link {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover,
+    .ghost-link:hover {
+      transform: translateY(-1px);
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    button.primary:hover {
+      background: var(--accent-hover);
+    }
+
+    button.secondary,
+    .ghost-link {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .inline-status {
+      min-height: 22px;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .inline-status.error { color: #fca5a5; }
+    .inline-status.success { color: #86efac; }
+
+    .database-card {
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .snippet-card {
+      margin-top: 24px;
+    }
+
+    .hint-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--text-dim);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .banner {
+      margin-bottom: 16px;
+      padding: 14px 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      background: rgba(245, 158, 11, 0.08);
+      color: #fde68a;
+      font-size: 14px;
+      display: none;
+    }
+
+    @media (max-width: 920px) {
+      .hero,
+      .database-card,
+      .cards,
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <section class="panel hero-card">
+        <div class="eyebrow">First-Run Setup</div>
+        <h1><span>CMS</span> Bridge onboarding</h1>
+        <p>
+          Configure dashboard access and provider credentials before creating your first sync connection.
+          This setup screen can save directly into a local <code>.env</code> file when the app is running in a writable self-hosted environment.
+        </p>
+        <div class="top-actions" style="margin-top:20px">
+          <a class="ghost-link" href="/">Open dashboard</a>
+          <a class="ghost-link" href="/login">Sign in</a>
+        </div>
+      </section>
+
+      <aside class="panel status-summary">
+        <h2 style="margin:0">Setup status</h2>
+        <div class="status-grid">
+          <div class="status-card" style="padding:0">
+            <div class="row">
+              <div>
+                <strong>Database</strong>
+                <p id="db-status-copy">Checking database configuration...</p>
+              </div>
+              <span class="status-pill warn" id="db-status-pill">Pending</span>
+            </div>
+          </div>
+          <div class="status-card" style="padding:0">
+            <div class="row">
+              <div>
+                <strong>Application setup</strong>
+                <p id="setup-status-copy">Loading setup status...</p>
+              </div>
+              <span class="status-pill warn" id="setup-status-pill">Pending</span>
+            </div>
+          </div>
+        </div>
+        <p class="mode-note" id="mode-note"></p>
+        <ul class="hint-list">
+          <li>Database connection must exist before the app can start.</li>
+          <li>Password and session secret protect the dashboard and APIs.</li>
+          <li>Airtable and Webflow credentials unlock discovery and sync actions.</li>
+        </ul>
+      </aside>
+    </div>
+
+    <div class="banner" id="mode-banner"></div>
+
+    <section class="panel database-card">
+      <div>
+        <h2>Database connection</h2>
+        <p class="database-note">
+          CMS Bridge cannot boot without PostgreSQL, so <code>DATABASE_URL</code> or <code>POSTGRES_URL</code>
+          must be configured before the dashboard can sync data. You can use Supabase, Render Postgres,
+          or your own PostgreSQL instance. On local setups this usually lives in your <code>.env</code>.
+        </p>
+      </div>
+      <div>
+        <div class="status-card" style="padding:0">
+          <div class="row">
+            <div>
+              <strong>Current status</strong>
+              <p id="db-status-detail">Waiting for status...</p>
+            </div>
+            <span class="status-pill warn" id="db-status-detail-pill">Pending</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cards" id="field-cards"></section>
+
+    <section class="panel snippet-card">
+      <h2>Deployment env block</h2>
+      <p class="hint">
+        Use this when you are deploying on Vercel, Render, or another platform where environment variables must be set outside the running app. Supabase users should paste the Postgres connection string from Supabase into <code>DATABASE_URL</code> and typically set <code>PGSSLMODE=require</code>.
+      </p>
+      <div class="snippet-actions" style="margin:16px 0 12px">
+        <button class="secondary" type="button" onclick="copyEnvSnippet()">Copy env block</button>
+      </div>
+      <textarea id="env-snippet" readonly></textarea>
+      <div class="inline-status" id="copy-status"></div>
+    </section>
+  </div>
+
+  <script>
+    const fieldValues = {
+      DATABASE_URL: '',
+      POSTGRES_URL: '',
+      AIRTABLE_API_KEY: '',
+      WEBFLOW_API_TOKEN: '',
+      APP_PASSWORD: '',
+      APP_SESSION_SECRET: '',
+      APP_AUTOMATION_TOKEN: '',
+    };
+
+    let setupStatus = null;
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function generateSecret(length = 40) {
+      const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*()-_=+';
+      const bytes = new Uint8Array(length);
+      crypto.getRandomValues(bytes);
+      return Array.from(bytes, value => alphabet[value % alphabet.length]).join('');
+    }
+
+    function getDefaultPlaceholder(key) {
+      const defaults = {
+        DATABASE_URL: 'postgresql://USERNAME:PASSWORD@HOST:5432/cms_bridge',
+        POSTGRES_URL: '',
+        AIRTABLE_API_KEY: 'your_airtable_personal_access_token',
+        WEBFLOW_API_TOKEN: 'your_webflow_api_token',
+        APP_PASSWORD: 'choose_a_shared_dashboard_password',
+        APP_SESSION_SECRET: 'replace_with_a_long_random_string',
+        APP_AUTOMATION_TOKEN: '',
+      };
+      return defaults[key] || '';
+    }
+
+    function buildEnvSnippet() {
+      const lines = [
+        `DATABASE_URL=${fieldValues.DATABASE_URL || getDefaultPlaceholder('DATABASE_URL')}`,
+        `POSTGRES_URL=${fieldValues.POSTGRES_URL || getDefaultPlaceholder('POSTGRES_URL')}`,
+        `AIRTABLE_API_KEY=${fieldValues.AIRTABLE_API_KEY || getDefaultPlaceholder('AIRTABLE_API_KEY')}`,
+        `WEBFLOW_API_TOKEN=${fieldValues.WEBFLOW_API_TOKEN || getDefaultPlaceholder('WEBFLOW_API_TOKEN')}`,
+        `APP_PASSWORD=${fieldValues.APP_PASSWORD || getDefaultPlaceholder('APP_PASSWORD')}`,
+        `APP_SESSION_SECRET=${fieldValues.APP_SESSION_SECRET || getDefaultPlaceholder('APP_SESSION_SECRET')}`,
+        `APP_AUTOMATION_TOKEN=${fieldValues.APP_AUTOMATION_TOKEN || ''}`,
+        '',
+        '# Optional runtime settings',
+        'PORT=3456',
+        'HOST=0.0.0.0',
+        'LOG_LEVEL=info',
+        'PGSSLMODE=disable',
+        'PG_POOL_SIZE=3',
+      ];
+
+      document.getElementById('env-snippet').value = lines.join('\n');
+    }
+
+    function updateFieldValue(key, value) {
+      fieldValues[key] = value;
+      buildEnvSnippet();
+    }
+
+    function renderStatus() {
+      const dbCopy = setupStatus.databaseConfigured
+        ? `Connected via ${setupStatus.databaseVariable}`
+        : setupStatus.databaseVariable
+          ? `Configured via ${setupStatus.databaseVariable}, but the connection is not ready${setupStatus.databaseError ? `: ${setupStatus.databaseError}` : ''}`
+          : 'Missing DATABASE_URL or POSTGRES_URL';
+      const dbPillClass = setupStatus.databaseConfigured ? 'ok' : 'warn';
+      const appReady = setupStatus.fullyConfigured ? 'Ready' : 'Needs setup';
+      const appPillClass = setupStatus.fullyConfigured ? 'ok' : 'warn';
+      const modeText = setupStatus.canSaveFromUi
+        ? `In-app save is enabled. Changes will be written to ${setupStatus.envFilePath}.`
+        : 'This deployment is using external environment management. Use the env block below in your host settings.';
+
+      document.getElementById('db-status-copy').textContent = dbCopy;
+      document.getElementById('db-status-pill').className = `status-pill ${dbPillClass}`;
+      document.getElementById('db-status-pill').textContent = setupStatus.databaseConfigured ? 'Configured' : 'Required';
+      document.getElementById('setup-status-copy').textContent = setupStatus.fullyConfigured
+        ? 'All required credentials are configured.'
+        : 'Complete the required fields below.';
+      document.getElementById('setup-status-pill').className = `status-pill ${appPillClass}`;
+      document.getElementById('setup-status-pill').textContent = appReady;
+      document.getElementById('mode-note').textContent = modeText;
+      document.getElementById('db-status-detail').textContent = dbCopy;
+      document.getElementById('db-status-detail-pill').className = `status-pill ${dbPillClass}`;
+      document.getElementById('db-status-detail-pill').textContent = setupStatus.databaseConfigured ? 'Configured' : 'Required';
+
+      const banner = document.getElementById('mode-banner');
+      if (setupStatus.canSaveFromUi) {
+        banner.style.display = 'none';
+      } else {
+        banner.style.display = 'block';
+        banner.textContent = 'Direct saving is disabled here. Fill in the fields to prepare an env block, then paste it into your deployment platform settings.';
+      }
+    }
+
+    function renderFields() {
+      const container = document.getElementById('field-cards');
+      container.innerHTML = setupStatus.fields.map(field => {
+        const fieldStatusClass = field.configured ? 'ok' : (field.required ? 'warn' : 'warn');
+        const fieldStatusLabel = field.configured ? 'Configured' : (field.required ? 'Required' : 'Optional');
+        const primaryButton = field.key === 'APP_PASSWORD'
+          ? `<button class="secondary" type="button" onclick="fillGenerated('${field.key}', 24)">Generate password</button>`
+          : field.kind !== 'token'
+            ? (field.kind === 'connection' ? '' : `<button class="secondary" type="button" onclick="fillGenerated('${field.key}', 40)">Generate secret</button>`)
+            : '';
+
+        return `
+          <section class="panel field-card">
+            <div class="field-head">
+              <div>
+                <strong>${escapeHtml(field.label)}</strong>
+                <div class="field-meta">
+                  <span class="chip ${field.required ? 'required' : ''}">${field.required ? 'Required' : 'Optional'}</span>
+                  <span class="chip">${escapeHtml(field.category)}</span>
+                </div>
+              </div>
+              <span class="status-pill ${fieldStatusClass}">${fieldStatusLabel}</span>
+            </div>
+            <div class="field-help">${escapeHtml(field.description)}</div>
+            <div>
+              <label for="field-${field.key}">${escapeHtml(field.label)}</label>
+              <input
+                id="field-${field.key}"
+                type="${field.kind === 'password' ? 'password' : 'text'}"
+                autocomplete="off"
+                placeholder="${escapeHtml(getDefaultPlaceholder(field.key))}"
+                oninput="updateFieldValue('${field.key}', this.value)"
+              >
+            </div>
+            <div class="field-actions">
+              ${primaryButton}
+              ${setupStatus.canSaveFromUi ? `<button class="primary" type="button" onclick="saveSingleField('${field.key}')">Save ${escapeHtml(field.label)}</button>` : ''}
+            </div>
+          </section>
+        `;
+      }).join('');
+    }
+
+    async function fillGenerated(key, length) {
+      const value = generateSecret(length);
+      const input = document.getElementById(`field-${key}`);
+      const status = document.getElementById('copy-status');
+      input.value = value;
+      updateFieldValue(key, value);
+
+      if (key !== 'APP_PASSWORD') {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(value);
+        status.className = 'inline-status success';
+        status.textContent = 'Generated a new password and copied it to the clipboard.';
+      } catch (error) {
+        status.className = 'inline-status error';
+        status.textContent = error?.message || 'Generated a new password, but failed to copy it to the clipboard.';
+      }
+    }
+
+    async function copyEnvSnippet() {
+      const status = document.getElementById('copy-status');
+      try {
+        await navigator.clipboard.writeText(document.getElementById('env-snippet').value);
+        status.className = 'inline-status success';
+        status.textContent = 'Env block copied.';
+      } catch (error) {
+        status.className = 'inline-status error';
+        status.textContent = error.message || 'Failed to copy.';
+      }
+    }
+
+    async function saveSingleField(key) {
+      if (!setupStatus.canSaveFromUi) return;
+
+      const statusEl = document.getElementById('copy-status');
+      statusEl.className = 'inline-status';
+      statusEl.textContent = 'Saving...';
+
+      try {
+        if ((key === 'DATABASE_URL' || key === 'POSTGRES_URL') && !fieldValues[key]) {
+          throw new Error('Database URL values cannot be empty when saving from onboarding.');
+        }
+
+        const response = await fetch('/api/setup/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ [key]: fieldValues[key] }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to save setup value.');
+        }
+
+        setupStatus = data.status;
+        renderStatus();
+        renderFields();
+        buildEnvSnippet();
+        statusEl.className = 'inline-status success';
+        statusEl.textContent = 'Saved. The running app will use the new value immediately.';
+
+        if (setupStatus.fullyConfigured) {
+          setTimeout(() => { window.location.href = '/'; }, 400);
+        }
+      } catch (error) {
+        statusEl.className = 'inline-status error';
+        statusEl.textContent = error.message || 'Failed to save setup value.';
+      }
+    }
+
+    async function loadSetup() {
+      const response = await fetch('/api/setup/status');
+      if (response.status === 401) {
+        window.location.href = '/login?next=/setup';
+        return;
+      }
+
+      const data = await response.json();
+      setupStatus = data.status;
+      renderStatus();
+      renderFields();
+      buildEnvSnippet();
+    }
+
+    loadSetup().catch(error => {
+      document.getElementById('mode-banner').style.display = 'block';
+      document.getElementById('mode-banner').textContent = error.message || 'Failed to load setup status.';
+    });
+  </script>
+</body>
+</html>

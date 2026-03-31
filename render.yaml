@@ -1,0 +1,37 @@
+databases:
+  - name: cms-bridge-db
+    databaseName: cms_bridge
+    user: cms_bridge
+    plan: free
+
+services:
+  - type: web
+    name: cms-bridge
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: HOST
+        value: 0.0.0.0
+      - key: LOG_LEVEL
+        value: info
+      - key: AIRTABLE_API_KEY
+        sync: false
+      - key: WEBFLOW_API_TOKEN
+        sync: false
+      - key: APP_PASSWORD
+        sync: false
+      - key: APP_SESSION_SECRET
+        sync: false
+      - key: APP_AUTOMATION_TOKEN
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cms-bridge-db
+          property: connectionString
+      - key: PG_POOL_SIZE
+        value: 3

@@ -1,0 +1,2230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMS Bridge</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c26;
+      --border: #2a2a3a;
+      --text: #e4e4ef;
+      --text-dim: #8888a0;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --radius: 8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    header h1 span { color: var(--accent); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .status-dot.ok { background: var(--success); }
+    .status-dot.error { background: var(--error); }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .toolbar h2 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: var(--accent-hover); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    button.secondary {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+
+    button.secondary:hover { background: var(--border); }
+
+    button.danger { background: var(--error); }
+    button.danger:hover { opacity: 0.8; }
+
+    button.success { background: var(--success); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge.at-to-wf { background: #6366f120; color: var(--accent); }
+    .badge.wf-to-at { background: #22c55e20; color: var(--success); }
+    .badge.active { background: #22c55e20; color: var(--success); }
+    .badge.inactive { background: #ef444420; color: var(--error); }
+    .badge.partial { background: #f59e0b20; color: var(--warning); }
+
+    .card-meta {
+      display: flex;
+      gap: 24px;
+      color: var(--text-dim);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .card-actions button {
+      padding: 6px 14px;
+      font-size: 13px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 64px 32px;
+      color: var(--text-dim);
+    }
+
+    .empty h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      width: 90%;
+      max-width: 640px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--accent);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    /* Mapping editor */
+    .mapping-header {
+      display: grid;
+      grid-template-columns: 1fr 40px 1fr 40px;
+      gap: 8px;
+      padding: 0 8px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+    }
+
+    .mapping-row {
+      display: grid;
+      grid-template-columns: 1fr 40px 1fr 40px;
+      gap: 8px;
+      align-items: start;
+      margin-bottom: 8px;
+      padding: 8px;
+      background: var(--surface2);
+      border-radius: var(--radius);
+    }
+
+    .mapping-row select {
+      padding: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .mapping-arrow {
+      text-align: center;
+      color: var(--accent);
+      font-size: 16px;
+      padding-top: 6px;
+    }
+
+    .mapping-row .remove-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--error);
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    /* New field creation inline form */
+    .new-field-form {
+      margin-top: 6px;
+      padding: 10px;
+      background: var(--bg);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+    }
+
+    .new-field-form .nf-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .new-field-form .nf-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .new-field-form input,
+    .new-field-form select {
+      padding: 6px 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-size: 12px;
+      flex: 1;
+    }
+
+    .new-field-form button {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .new-field-form .nf-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    /* Auto-map summary */
+    .automap-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .automap-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .automap-stats .stat-matched { color: var(--success); }
+    .automap-stats .stat-new { color: var(--warning); }
+    .automap-stats .stat-skipped { color: var(--text-dim); }
+
+    .automap-bar .automap-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .automap-bar .automap-actions button {
+      padding: 6px 14px;
+      font-size: 13px;
+    }
+
+    /* New field badge in mapping row */
+    .at-new-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      background: #f59e0b18;
+      border: 1px dashed var(--warning);
+      border-radius: 4px;
+      font-size: 13px;
+      color: var(--warning);
+      width: 100%;
+    }
+
+    .at-new-badge .new-tag {
+      background: var(--warning);
+      color: var(--bg);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      flex-shrink: 0;
+    }
+
+    .at-new-badge .new-field-name {
+      color: var(--text);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .at-new-badge .new-field-type {
+      color: var(--text-dim);
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .mapping-row.is-new-field {
+      border-left: 2px solid var(--warning);
+    }
+
+    .mapping-row.is-matched {
+      border-left: 2px solid var(--success);
+    }
+
+    /* Sync log */
+    .log-entry {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .log-entry:last-child { border-bottom: none; }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .log-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .log-direction {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--surface2);
+      color: var(--text-dim);
+      font-family: monospace;
+      letter-spacing: 0.3px;
+    }
+
+    .log-duration {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .log-stats {
+      display: flex;
+      gap: 12px;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .log-stats .created { color: var(--success); font-weight: 600; }
+    .log-stats .updated { color: var(--accent); font-weight: 600; }
+    .log-stats .deleted { color: var(--error); font-weight: 600; }
+    .log-stats .failed  { color: var(--warning); font-weight: 600; }
+
+    .log-stats span[title]::after {
+      content: attr(data-label);
+      font-size: 10px;
+      font-weight: 400;
+      opacity: 0.7;
+      margin-left: 2px;
+    }
+
+    .log-errors {
+      margin-top: 10px;
+    }
+
+    .log-errors summary {
+      font-size: 12px;
+      color: var(--warning);
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .log-errors summary::-webkit-details-marker { display: none; }
+
+    .log-errors summary::before {
+      content: '▶';
+      font-size: 9px;
+      transition: transform 0.15s;
+    }
+
+    .log-errors[open] summary::before { transform: rotate(90deg); }
+
+    .error-list {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .error-item {
+      background: #1a0f0f;
+      border: 1px solid #4a1a1a;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .error-record {
+      display: block;
+      color: var(--text-dim);
+      font-family: monospace;
+      font-size: 11px;
+      margin-bottom: 3px;
+    }
+
+    .error-field {
+      display: inline-block;
+      background: #2a1a1a;
+      color: #fca5a5;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-bottom: 3px;
+    }
+
+    .error-msg {
+      color: #fca5a5;
+      line-height: 1.4;
+    }
+
+    .advanced-section {
+      margin: 12px 0 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .advanced-section summary {
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+      background: var(--surface2);
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .advanced-section summary::-webkit-details-marker { display: none; }
+
+    .advanced-section summary::before {
+      content: '▶';
+      font-size: 9px;
+      transition: transform 0.15s;
+    }
+
+    .advanced-section[open] summary::before { transform: rotate(90deg); }
+
+    .advanced-section .help-text {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin: 12px 14px 8px;
+      line-height: 1.5;
+    }
+
+    .advanced-section .form-row {
+      padding: 0 14px;
+    }
+
+    .field-hint {
+      display: block;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 3px;
+    }
+
+    /* Metadata fields are auto-managed during mapping approval. */
+    .metadata-section {
+      display: none;
+      margin: 16px 0;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface2);
+    }
+
+    .metadata-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .required-badge {
+      background: #ef444420;
+      color: var(--error);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metadata-help {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      z-index: 200;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.success { background: var(--success); color: white; }
+    .toast.error { background: var(--error); color: white; }
+    .toast.warning { background: var(--warning); color: #1a0f00; }
+
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><span>CMS</span> Bridge</h1>
+    <div class="header-actions">
+      <div id="health-status">
+        <span class="status-dot" id="health-dot"></span>
+        <span id="health-text" style="font-size:13px; color:var(--text-dim)">Checking...</span>
+      </div>
+      <button type="button" class="secondary" onclick="window.location.href='/setup'">Setup</button>
+      <button type="button" class="secondary" onclick="logout()">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="card" id="setup-banner" style="display:none; border-color:#6b4f1d; background:#1a140d">
+      <div style="display:flex; justify-content:space-between; gap:16px; align-items:center; flex-wrap:wrap">
+        <div>
+          <h3 style="margin-bottom:6px">Finish setup before syncing</h3>
+          <p id="setup-banner-copy" style="color:var(--text-dim); font-size:14px; line-height:1.5">
+            Configure your dashboard password, provider API keys, and database before creating sync connections.
+          </p>
+        </div>
+        <button type="button" onclick="window.location.href='/setup'">Open Setup</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <h2>Connections</h2>
+      <button onclick="openCreateModal()">+ New Connection</button>
+    </div>
+
+    <div id="connections-list"></div>
+  </main>
+
+  <!-- Create / Edit Connection Modal -->
+  <div class="modal-overlay" id="connection-modal">
+    <div class="modal">
+      <h2 id="modal-title">New Connection</h2>
+      <form id="connection-form" onsubmit="saveConnection(event)">
+        <input type="hidden" id="edit-id">
+
+        <div class="form-group">
+          <label>Connection Name</label>
+          <input type="text" id="conn-name" required placeholder="My Blog Posts Sync">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Airtable Base</label>
+            <select id="conn-base" onchange="loadTables()">
+              <option value="">Select a base...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Airtable Table</label>
+            <select id="conn-table" onchange="onTableSelected()">
+              <option value="">Select a table...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Webflow Site</label>
+            <select id="conn-site" onchange="loadCollections()">
+              <option value="">Select a site...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Webflow Collection</label>
+            <select id="conn-collection" onchange="onCollectionSelected()">
+              <option value="">Select a collection...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cron Schedule <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+            <input type="text" id="conn-cron" placeholder="*/30 * * * *  (every 30 min)">
+          </div>
+          <div class="form-group"></div>
+        </div>
+
+        <div class="metadata-section">
+          <div class="metadata-header">
+            Sync Metadata Fields
+            <span class="required-badge">Required</span>
+          </div>
+          <p class="metadata-help">
+            Select your existing Airtable/Webflow fields for sync tracking. Use "✚ Create new field…" to create any missing fields automatically.
+          </p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>CMS-B: Message Field</label>
+              <select id="conn-message-field">
+                <option value="">— pick a table first —</option>
+              </select>
+              <span class="field-hint">Per-record sync status / error messages</span>
+            </div>
+            <div class="form-group">
+              <label>CMS-B: Sync Time Field</label>
+              <select id="conn-sync-time-field">
+                <option value="">— pick a table first —</option>
+              </select>
+              <span class="field-hint">Per-record sync timestamp (written after each sync)</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Webflow ID Field</label>
+              <select id="conn-webflow-id-field">
+                <option value="">— pick a table first —</option>
+              </select>
+              <span class="field-hint">Stores the Webflow item ID in Airtable for cross-reference</span>
+            </div>
+            <div class="form-group">
+              <label>Last Modified Field</label>
+              <select id="conn-last-modified-field">
+                <option value="">— pick a table first —</option>
+              </select>
+              <span class="field-hint">Enables delta sync. Use Airtable's built-in "Last modified time" field type (create it manually in Airtable, then select it here)</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Airtable ID Slug</label>
+              <select id="conn-airtable-id-slug">
+                <option value="">— pick a collection first —</option>
+              </select>
+              <span class="field-hint">Webflow field that stores the Airtable record ID</span>
+            </div>
+            <div class="form-group">
+              <label>CMS-B: Action Field <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+              <select id="conn-action-field">
+                <option value="">— disabled —</option>
+              </select>
+              <span class="field-hint">Single Select field with Draft / Stage / Publish / Archive / Delete choices. Controls Webflow item lifecycle per record.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit">Save Connection</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Field Mapping Modal -->
+  <div class="modal-overlay" id="mapping-modal">
+    <div class="modal" style="max-width: 860px">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px">
+        <div>
+          <h2 style="margin-bottom:4px">Field Mappings</h2>
+          <p style="color:var(--text-dim); font-size:13px" id="mapping-conn-name"></p>
+        </div>
+        <button type="button" onclick="runAutoMap()" id="automap-btn" style="white-space:nowrap">Auto-map Fields</button>
+      </div>
+
+      <div id="automap-summary" style="display:none"></div>
+
+      <div class="mapping-header">
+        <span>Webflow Field</span>
+        <span></span>
+        <span>Airtable Field</span>
+        <span></span>
+      </div>
+
+      <div id="mappings-container"></div>
+
+      <button type="button" class="secondary" onclick="addMappingRow()" style="margin-top:8px; width:100%">
+        + Add Field Mapping
+      </button>
+
+      <div class="form-actions">
+        <button type="button" class="secondary" onclick="closeMappingModal()">Cancel</button>
+        <button type="button" id="save-mappings-btn" onclick="approveAndSaveMappings()">Save Mappings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync Logs Modal -->
+  <div class="modal-overlay" id="logs-modal">
+    <div class="modal" style="max-width: 700px">
+      <h2>Sync History</h2>
+      <p style="color:var(--text-dim); margin-bottom:16px; font-size:13px" id="logs-conn-name"></p>
+      <div id="logs-container"></div>
+      <div class="form-actions">
+        <button type="button" class="secondary" onclick="closeLogsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = '/api';
+    let airtableBases = [];
+    let airtableTables = [];
+    let webflowSites = [];
+    let webflowCollections = [];
+    let currentMappingConnectionId = null;
+    let currentMappingConnection = null;
+    let cachedAirtableFields = [];
+    let cachedWebflowFields = [];
+    let cachedAllAirtableTables = []; // all tables in the base, for linked-record picker
+    let cachedConnections = [];       // all connections, for cross-collection reference picker
+    let setupStatus = null;
+
+    // Webflow-to-Airtable type mapping for auto-suggesting types when creating fields
+    const WF_TO_AT_TYPE_MAP = {
+      'PlainText': 'singleLineText',
+      'RichText': 'richText',
+      'Image': 'multipleAttachments',
+      'MultiImage': 'multipleAttachments',
+      'Video': 'url',
+      'VideoLink': 'url',
+      'Link': 'url',
+      'Email': 'email',
+      'Phone': 'phone',
+      'Number': 'number',
+      'DateTime': 'dateTime',
+      'Switch': 'checkbox',
+      'Color': 'singleLineText',
+      'Option': 'singleSelect',
+      'File': 'multipleAttachments',
+      'Reference': 'multipleRecordLinks',
+      'MultiReference': 'multipleRecordLinks',
+    };
+
+    const AT_TYPE_LABELS = {
+      'singleLineText': 'Single line text',
+      'multilineText': 'Long text',
+      'richText': 'Rich text',
+      'multipleAttachments': 'Attachment',
+      'singleSelect': 'Single select',
+      'number': 'Number',
+      'currency': 'Currency',
+      'percent': 'Percent',
+      'date': 'Date',
+      'dateTime': 'Date & Time',
+      'email': 'Email',
+      'phone': 'Phone',
+      'url': 'URL',
+      'checkbox': 'Checkbox',
+      'multipleRecordLinks': 'Link to another record',
+      'rating': 'Rating',
+    };
+
+    // ─── Init ────────────────────────────────────────────────────
+
+    async function init() {
+      checkHealth();
+      loadSetupStatus();
+      loadConnections();
+    }
+
+    async function loadSetupStatus() {
+      try {
+        const res = await fetch('/api/setup/status');
+        const data = await res.json();
+        setupStatus = data.status;
+
+        const banner = document.getElementById('setup-banner');
+        const copy = document.getElementById('setup-banner-copy');
+        if (!setupStatus?.fullyConfigured) {
+          banner.style.display = 'block';
+          const parts = [];
+          if (!setupStatus.databaseConfigured) parts.push('database connection');
+          if (!setupStatus.authConfigured) parts.push('dashboard password and session secret');
+          if (!setupStatus.providerCredentialsConfigured) parts.push('Airtable and Webflow API keys');
+          copy.textContent = `Still missing: ${parts.join(', ')}. Open Setup to finish onboarding.`;
+        } else {
+          banner.style.display = 'none';
+        }
+      } catch {
+        // Ignore setup status failures on the dashboard shell.
+      }
+    }
+
+    async function checkHealth() {
+      try {
+        const res = await fetch(`${API}/health`);
+        const data = await res.json();
+        document.getElementById('health-dot').className = 'status-dot ok';
+        document.getElementById('health-text').textContent = 'Connected';
+      } catch {
+        document.getElementById('health-dot').className = 'status-dot error';
+        document.getElementById('health-text').textContent = 'Disconnected';
+      }
+    }
+
+    async function logout() {
+      try {
+        await fetch(`${API}/logout`, { method: 'POST' });
+      } finally {
+        window.location.href = '/login';
+      }
+    }
+
+    // ─── Connections ─────────────────────────────────────────────
+
+    async function loadConnections() {
+      try {
+        const res = await fetch(`${API}/connections`);
+        const data = await res.json();
+        renderConnections(data.connections);
+      } catch (err) {
+        showToast('Failed to load connections', 'error');
+      }
+    }
+
+    function renderConnections(connections) {
+      const container = document.getElementById('connections-list');
+      if (!connections.length) {
+        container.innerHTML = `
+          <div class="empty card">
+            <h3>No connections yet</h3>
+            <p>Create your first connection to start syncing between Airtable and Webflow.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = connections.map(c => `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>${esc(c.name)}</h3>
+              <div style="margin-top:6px">
+                <span class="badge ${c.is_active ? 'active' : 'inactive'}">
+                  ${c.is_active ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            </div>
+            <div class="card-actions">
+              <button class="success" onclick="triggerSync('${c.id}', 'airtable_to_webflow', this)">↑ Sync to Webflow</button>
+              <button class="secondary" onclick="triggerSync('${c.id}', 'airtable_to_webflow', this, { force: true })">↑ Force Re-sync</button>
+              <button class="success" onclick="triggerSync('${c.id}', 'webflow_to_airtable', this)">↓ Sync from Webflow</button>
+              <button class="secondary" onclick="triggerSync('${c.id}', 'webflow_to_airtable', this, { force: true })">↓ Force Re-sync</button>
+              <button class="secondary" onclick="openMappingModal('${c.id}')">Mappings</button>
+              <button class="secondary" onclick="openLogsModal('${c.id}')">Logs</button>
+              <button class="secondary" onclick="editConnection('${c.id}')">Edit</button>
+              <button class="danger" onclick="removeConnection('${c.id}')">Delete</button>
+            </div>
+          </div>
+          <div class="card-meta">
+            <span title="Click to copy connection ID" style="cursor:pointer;font-family:monospace" onclick="navigator.clipboard.writeText('${esc(c.id)}').then(()=>showToast('Connection ID copied!'))">ID: ${esc(c.id)} 📋</span>
+            <span>Base: ${esc(c.airtable_base_id)}</span>
+            <span>Collection: ${esc(c.webflow_collection_id)}</span>
+            ${c.last_synced_at ? `<span>Last synced: ${new Date(c.last_synced_at).toLocaleString()}</span>` : '<span>Never synced</span>'}
+            ${c.cron_schedule ? `<span>Schedule: ${esc(c.cron_schedule)}</span>` : ''}
+            ${c.last_modified_field ? '<span style="color:var(--success)">Delta sync</span>' : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ─── Create / Edit Modal ─────────────────────────────────────
+
+    async function openCreateModal() {
+      document.getElementById('modal-title').textContent = 'New Connection';
+      document.getElementById('edit-id').value = '';
+      document.getElementById('connection-form').reset();
+      document.getElementById('connection-modal').classList.add('active');
+      await loadDiscoveryData();
+    }
+
+    async function editConnection(id) {
+      const res = await fetch(`${API}/connections/${id}`);
+      const { connection: c } = await res.json();
+
+      document.getElementById('modal-title').textContent = 'Edit Connection';
+      document.getElementById('edit-id').value = c.id;
+      document.getElementById('conn-name').value = c.name;
+      document.getElementById('conn-action-field').value = c.action_field || '';
+      document.getElementById('conn-cron').value = c.cron_schedule || '';
+
+      await loadDiscoveryData();
+
+      // Load Airtable tables, set table, then populate metadata dropdowns with existing values
+      document.getElementById('conn-base').value = c.airtable_base_id;
+      await loadTables();
+      document.getElementById('conn-table').value = c.airtable_table_id;
+      populateAirtableMetaDropdowns({
+        'conn-message-field': c.message_field || '',
+        'conn-sync-time-field': c.sync_time_field || '',
+        'conn-webflow-id-field': c.webflow_id_field || '',
+        'conn-last-modified-field': c.last_modified_field || '',
+        'conn-action-field': c.action_field || '',
+      });
+
+      // Load Webflow collections, set collection, then populate slug dropdown with existing value
+      document.getElementById('conn-site').value = c.webflow_site_id;
+      await loadCollections();
+      document.getElementById('conn-collection').value = c.webflow_collection_id;
+      populateWebflowMetaDropdowns({ 'conn-airtable-id-slug': c.airtable_id_slug || '' });
+
+      document.getElementById('connection-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('connection-modal').classList.remove('active');
+    }
+
+    async function saveConnection(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-id').value;
+      const autoSettings = buildAutomaticConnectionSettings();
+      const body = {
+        name: document.getElementById('conn-name').value,
+        airtable_base_id: document.getElementById('conn-base').value,
+        airtable_table_id: document.getElementById('conn-table').value,
+        webflow_site_id: document.getElementById('conn-site').value,
+        webflow_collection_id: document.getElementById('conn-collection').value,
+        action_field: autoSettings.action_field,
+        message_field: autoSettings.message_field,
+        sync_time_field: autoSettings.sync_time_field,
+        webflow_id_field: autoSettings.webflow_id_field,
+        airtable_id_slug: null,
+        last_modified_field: autoSettings.last_modified_field,
+        cron_schedule: document.getElementById('conn-cron').value || undefined,
+        is_active: true,
+      };
+
+      try {
+        const url = id ? `${API}/connections/${id}` : `${API}/connections`;
+        const method = id ? 'PATCH' : 'POST';
+        const res = await fetch(url, {
+          method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        showToast(id ? 'Connection updated' : 'Connection created', 'success');
+        closeModal();
+        await loadConnections();
+        if (!id && data.connection?.id) {
+          await openMappingModal(data.connection.id, { autoMap: true });
+          showToast('Suggested mappings are ready. Review and approve them.', 'success');
+        }
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function removeConnection(id) {
+      if (!confirm('Delete this connection? This cannot be undone.')) return;
+      try {
+        await fetch(`${API}/connections/${id}`, { method: 'DELETE' });
+        showToast('Connection deleted', 'success');
+        loadConnections();
+      } catch (err) {
+        showToast('Failed to delete', 'error');
+      }
+    }
+
+    // ─── Discovery ───────────────────────────────────────────────
+
+    async function loadDiscoveryData() {
+      try {
+        const [basesRes, sitesRes] = await Promise.all([
+          fetch(`${API}/discover/airtable/bases`),
+          fetch(`${API}/discover/webflow/sites`)
+        ]);
+        const basesData = await basesRes.json();
+        const sitesData = await sitesRes.json();
+
+        airtableBases = basesData.bases || [];
+        webflowSites = sitesData.sites || [];
+
+        const baseSelect = document.getElementById('conn-base');
+        baseSelect.innerHTML = '<option value="">Select a base...</option>' +
+          airtableBases.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join('');
+
+        const siteSelect = document.getElementById('conn-site');
+        siteSelect.innerHTML = '<option value="">Select a site...</option>' +
+          webflowSites.map(s => `<option value="${s.id}">${esc(s.displayName)}</option>`).join('');
+        siteSelect.disabled = webflowSites.length === 1;
+        if (webflowSites.length === 1) {
+          siteSelect.value = webflowSites[0].id;
+          await loadCollections();
+        }
+      } catch (err) {
+        showToast('Failed to load Airtable/Webflow data. Check your API keys.', 'error');
+      }
+    }
+
+    async function loadTables() {
+      const baseId = document.getElementById('conn-base').value;
+      const tableSelect = document.getElementById('conn-table');
+      if (!baseId) { tableSelect.innerHTML = '<option value="">Select a table...</option>'; return; }
+
+      try {
+        const res = await fetch(`${API}/discover/airtable/bases/${baseId}/tables`);
+        const data = await res.json();
+        airtableTables = data.tables || [];
+        tableSelect.innerHTML = '<option value="">Select a table...</option>' +
+          airtableTables.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+      } catch {
+        showToast('Failed to load tables', 'error');
+      }
+    }
+
+    async function loadCollections() {
+      const siteId = document.getElementById('conn-site').value;
+      const collSelect = document.getElementById('conn-collection');
+      if (!siteId) { collSelect.innerHTML = '<option value="">Select a collection...</option>'; return; }
+
+      try {
+        const res = await fetch(`${API}/discover/webflow/sites/${siteId}/collections`);
+        const data = await res.json();
+        webflowCollections = data.collections || [];
+        collSelect.innerHTML = '<option value="">Select a collection...</option>' +
+          webflowCollections.map(c => `<option value="${c.id}">${esc(c.displayName)}</option>`).join('');
+      } catch {
+        showToast('Failed to load collections', 'error');
+      }
+    }
+
+    // ─── Metadata Field Populators ───────────────────────────────
+
+    // Called when the user picks a table (or programmatically after setting conn-table value).
+    // Populates the four Airtable metadata selects from that table's field list.
+    function onTableSelected() {
+      populateAirtableMetaDropdowns();
+    }
+
+    // Called when the user picks a collection (or programmatically after setting conn-collection).
+    // Populates the Webflow field slug select for airtable-id-slug.
+    function onCollectionSelected() {
+      populateWebflowMetaDropdowns();
+    }
+
+    // Default field names + types used when creating metadata fields from scratch.
+    // Includes both command choices (user picks these) and all "Re:" response choices
+    // (CMS Bridge writes these back). singleSelect rejects values not in its list,
+    // so every possible write-back value must be pre-seeded at field creation time.
+    const ACTION_CHOICES = [
+      'Draft', 'Stage', 'Publish', 'Archive', 'Delete',
+      'Re: Item drafted', 'Re: Item staged', 'Re: Item published',
+      'Re: Item archived', 'Re: Item deleted',
+      'Re: Item created', 'Re: Item updated',
+      'Re: Item encountered error',
+    ];
+    const META_FIELD_DEFAULTS = {
+      'conn-message-field':      { name: 'CMS-B: Message',     type: 'singleLineText', isWebflow: false },
+      'conn-sync-time-field':    { name: 'CMS-B: Sync Time',   type: 'singleLineText', isWebflow: false },
+      'conn-webflow-id-field':   { name: 'Webflow ID',         type: 'singleLineText', isWebflow: false },
+      'conn-last-modified-field':{ name: null, /* API doesn't support creating lastModifiedTime */ type: 'lastModifiedTime', isWebflow: false },
+      'conn-action-field':       { name: 'CMS-B: Action',      type: 'singleSelect',   isWebflow: false,
+                                   options: { choices: ACTION_CHOICES.map(n => ({ name: n })) } },
+    };
+    const AUTO_METADATA_KEYS = {
+      message_field: 'conn-message-field',
+      sync_time_field: 'conn-sync-time-field',
+      webflow_id_field: 'conn-webflow-id-field',
+      last_modified_field: 'conn-last-modified-field',
+      action_field: 'conn-action-field',
+    };
+
+    function slugify(value) {
+      return (value || '')
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function getCurrentAirtableTable() {
+      const tableId = document.getElementById('conn-table').value;
+      return airtableTables.find(t => t.id === tableId) || null;
+    }
+
+    function findAirtableFieldByName(fields, name) {
+      return fields.find(f => normalize(f.name) === normalize(name)) || null;
+    }
+
+    function findWebflowFieldBySlugOrName(fields, target) {
+      return fields.find(f => normalize(f.slug) === normalize(target) || normalize(f.displayName) === normalize(target)) || null;
+    }
+
+    function buildAutomaticConnectionSettings() {
+      const airtableFields = getCurrentAirtableTable()?.fields || [];
+
+      return {
+        message_field: findAirtableFieldByName(airtableFields, META_FIELD_DEFAULTS['conn-message-field'].name)?.name
+          || META_FIELD_DEFAULTS['conn-message-field'].name,
+        sync_time_field: findAirtableFieldByName(airtableFields, META_FIELD_DEFAULTS['conn-sync-time-field'].name)?.name
+          || META_FIELD_DEFAULTS['conn-sync-time-field'].name,
+        webflow_id_field: findAirtableFieldByName(airtableFields, META_FIELD_DEFAULTS['conn-webflow-id-field'].name)?.name
+          || META_FIELD_DEFAULTS['conn-webflow-id-field'].name,
+        action_field: findAirtableFieldByName(airtableFields, META_FIELD_DEFAULTS['conn-action-field'].name)?.name
+          || META_FIELD_DEFAULTS['conn-action-field'].name,
+        last_modified_field: airtableFields.find(f => f.type === 'lastModifiedTime')?.name,
+      };
+    }
+
+    async function createAirtableMetadataField(config) {
+      const res = await fetch(
+        `${API}/discover/airtable/bases/${currentMappingConnection.airtable_base_id}/tables/${currentMappingConnection.airtable_table_id}/fields`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: config.name, type: config.type, options: config.options }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create Airtable metadata field');
+      cachedAirtableFields.push(data.field);
+      return data.field;
+    }
+
+    async function ensureConnectionMetadata() {
+      const payload = { airtable_id_slug: null };
+      const createdLabels = [];
+
+      for (const [connectionKey, selectId] of Object.entries(AUTO_METADATA_KEYS)) {
+        const config = META_FIELD_DEFAULTS[selectId];
+        if (config.type === 'lastModifiedTime') continue;
+
+        const existing = currentMappingConnection?.[connectionKey]
+          ? findAirtableFieldByName(cachedAirtableFields, currentMappingConnection[connectionKey])
+          : null;
+        const found = existing || findAirtableFieldByName(cachedAirtableFields, config.name);
+        const field = found || await createAirtableMetadataField(config);
+        if (!found) createdLabels.push(config.name);
+        payload[connectionKey] = field.name;
+      }
+
+      const lastModifiedField = (
+        currentMappingConnection?.last_modified_field
+          ? findAirtableFieldByName(cachedAirtableFields, currentMappingConnection.last_modified_field)
+          : null
+      ) || cachedAirtableFields.find(f => f.type === 'lastModifiedTime');
+
+      if (lastModifiedField) {
+        payload.last_modified_field = lastModifiedField.name;
+      }
+
+      const res = await fetch(`${API}/connections/${currentMappingConnectionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update connection metadata');
+      currentMappingConnection = data.connection;
+
+      if (createdLabels.length > 0) {
+        showToast(`Auto-created metadata fields: ${createdLabels.join(', ')}`, 'success');
+      }
+      if (!payload.last_modified_field) {
+        showToast('No Airtable "Last modified time" field found. Delta sync stays off until you add one manually.', 'warning');
+      }
+    }
+
+    async function handleMetaFieldCreate(selectId) {
+      const config = META_FIELD_DEFAULTS[selectId];
+      const el = document.getElementById(selectId);
+      el.value = ''; // reset while user is prompted
+
+      // Airtable's lastModifiedTime can't be created via the API — must be done manually.
+      if (config.type === 'lastModifiedTime') {
+        showToast(
+          'Airtable\'s "Last modified time" field can\'t be created via API. ' +
+          'Add it manually in your Airtable base first, then come back and select it here.',
+          'error'
+        );
+        return;
+      }
+
+      const fieldName = prompt(`New field name:`, config.name);
+      if (!fieldName) return;
+
+      try {
+        if (config.isWebflow) {
+          const collectionId = document.getElementById('conn-collection').value;
+          if (!collectionId) { showToast('Pick a Webflow collection first', 'error'); return; }
+
+          const res = await fetch(`${API}/discover/webflow/collections/${collectionId}/fields`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ displayName: fieldName, type: config.type }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed to create field');
+
+          // Add to cached collection so the dropdown re-populates with the new field
+          const coll = webflowCollections.find(c => c.id === collectionId);
+          if (coll) coll.fields.push(data.field);
+
+          populateWebflowMetaDropdowns({ 'conn-airtable-id-slug': data.field.slug });
+        } else {
+          const baseId  = document.getElementById('conn-base').value;
+          const tableId = document.getElementById('conn-table').value;
+          if (!baseId || !tableId) { showToast('Pick an Airtable table first', 'error'); return; }
+
+          const res = await fetch(`${API}/discover/airtable/bases/${baseId}/tables/${tableId}/fields`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: fieldName, type: config.type, options: config.options }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed to create field');
+
+          // Add to cached table so all dropdowns see the new field
+          const table = airtableTables.find(t => t.id === tableId);
+          if (table) table.fields.push(data.field);
+
+          // Re-populate all Airtable meta selects, preserving current selections on the others
+          const preserve = {};
+          ['conn-message-field', 'conn-sync-time-field', 'conn-webflow-id-field', 'conn-last-modified-field', 'conn-action-field'].forEach(id => {
+            preserve[id] = (id === selectId) ? data.field.name : document.getElementById(id).value;
+          });
+          populateAirtableMetaDropdowns(preserve);
+        }
+
+        showToast(`Field "${fieldName}" created`, 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function populateAirtableMetaDropdowns(preserveValues = {}) {
+      const tableId = document.getElementById('conn-table').value;
+      const table = airtableTables.find(t => t.id === tableId);
+      const fields = table ? table.fields : [];
+
+      const createOpt    = '<option value="__create__">✚ Create new field…</option>';
+      const emptyReq     = '<option value="">— select field —</option>';
+      const emptyOpt     = '<option value="">— disabled —</option>';
+      const fieldOptions = emptyReq
+        + fields.map(f => `<option value="${esc(f.name)}">${esc(f.name)} (${f.type})</option>`).join('')
+        + createOpt;
+      const fieldOptionsOpt = emptyOpt
+        + fields.map(f => `<option value="${esc(f.name)}">${esc(f.name)} (${f.type})</option>`).join('')
+        + createOpt;
+
+      // Required metadata fields
+      ['conn-message-field', 'conn-sync-time-field', 'conn-webflow-id-field', 'conn-last-modified-field'].forEach(id => {
+        const el = document.getElementById(id);
+        const prev = preserveValues[id] !== undefined ? preserveValues[id] : el.value;
+        el.innerHTML = fields.length ? fieldOptions : `${emptyReq}${createOpt}`;
+        if (prev) el.value = prev;
+        el.onchange = () => { if (el.value === '__create__') handleMetaFieldCreate(id); };
+      });
+
+      // Optional action field — uses "— disabled —" as empty option
+      const actionEl = document.getElementById('conn-action-field');
+      const actionPrev = preserveValues['conn-action-field'] !== undefined
+        ? preserveValues['conn-action-field'] : actionEl.value;
+      actionEl.innerHTML = fields.length ? fieldOptionsOpt : `${emptyOpt}${createOpt}`;
+      if (actionPrev) actionEl.value = actionPrev;
+      actionEl.onchange = () => { if (actionEl.value === '__create__') handleMetaFieldCreate('conn-action-field'); };
+    }
+
+    function populateWebflowMetaDropdowns(preserveValues = {}) {
+      const collectionId = document.getElementById('conn-collection').value;
+      const collection = webflowCollections.find(c => c.id === collectionId);
+      const fields = collection ? collection.fields.filter(f => f.isEditable) : [];
+
+      const el  = document.getElementById('conn-airtable-id-slug');
+      const prev = preserveValues['conn-airtable-id-slug'] !== undefined
+        ? preserveValues['conn-airtable-id-slug']
+        : el.value;
+
+      const createOpt = '<option value="__create__">✚ Create new field…</option>';
+      el.innerHTML = '<option value="">— select field —</option>'
+        + fields.map(f => `<option value="${esc(f.slug)}">${esc(f.displayName)} (${f.slug})</option>`).join('')
+        + (collectionId ? createOpt : '');
+
+      if (prev) el.value = prev;
+      el.onchange = () => { if (el.value === '__create__') handleMetaFieldCreate('conn-airtable-id-slug'); };
+    }
+
+    // ─── Field Mappings ──────────────────────────────────────────
+
+    async function openMappingModal(connectionId, options = {}) {
+      currentMappingConnectionId = connectionId;
+      const [connRes, mappingsRes, allConnRes] = await Promise.all([
+        fetch(`${API}/connections/${connectionId}`),
+        fetch(`${API}/connections/${connectionId}/mappings`),
+        fetch(`${API}/connections`)
+      ]);
+      const { connection } = await connRes.json();
+      currentMappingConnection = connection;
+      const { mappings } = await mappingsRes.json();
+      // All connections except current — used for cross-collection reference linking
+      const allConns = (await allConnRes.json()).connections || [];
+      cachedConnections = allConns.filter(c => c.id !== connectionId);
+
+      document.getElementById('mapping-conn-name').textContent = connection.name;
+      document.getElementById('automap-summary').style.display = 'none';
+      updateSaveButton();
+
+      // Load field schemas
+      try {
+        const [tablesRes, collRes] = await Promise.all([
+          fetch(`${API}/discover/airtable/bases/${connection.airtable_base_id}/tables`),
+          fetch(`${API}/discover/webflow/collections/${connection.webflow_collection_id}`)
+        ]);
+        const tablesData = await tablesRes.json();
+        const collData = await collRes.json();
+
+        cachedAllAirtableTables = tablesData.tables || [];
+        const table = cachedAllAirtableTables.find(t => t.id === connection.airtable_table_id);
+        cachedAirtableFields = table ? table.fields : [];
+        cachedWebflowFields = collData.collection ? collData.collection.fields : [];
+      } catch {
+        cachedAirtableFields = [];
+        cachedWebflowFields = [];
+      }
+
+      const container = document.getElementById('mappings-container');
+      container.innerHTML = '';
+
+      if (mappings.length) {
+        mappings.forEach(m => addMappingRow(m));
+      }
+
+      document.getElementById('mapping-modal').classList.add('active');
+      if (options.autoMap === true) {
+        runAutoMap();
+      }
+    }
+
+    // ─── Auto-Map ─────────────────────────────────────────────────
+
+    function normalize(str) {
+      return (str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function getReferenceCollectionId(wfField) {
+      const validations = wfField?.validations || {};
+      return validations.collectionId
+        || validations.collection_id
+        || (Array.isArray(validations.collectionIds) ? validations.collectionIds[0] : '')
+        || '';
+    }
+
+    function findMatchingAirtableField(wfField, autoLinkedConn = null) {
+      const wfNorm = normalize(wfField.displayName);
+      const wfSlugNorm = normalize(wfField.slug);
+      const isRefType = wfField.type === 'Reference' || wfField.type === 'MultiReference';
+      const candidates = cachedAirtableFields.filter(f => {
+        if (!isRefType) return true;
+        if (f.type !== 'multipleRecordLinks') return false;
+        const linkedTableId = f.options?.linkedTableId;
+        return !autoLinkedConn?.airtable_table_id || !linkedTableId || linkedTableId === autoLinkedConn.airtable_table_id;
+      });
+
+      // 1. Exact normalized name match
+      let match = candidates.find(f => normalize(f.name) === wfNorm);
+      if (match) return match;
+
+      // 2. Slug match (e.g. "blog-title" → "Blog Title")
+      match = candidates.find(f => normalize(f.name) === wfSlugNorm);
+      if (match) return match;
+
+      // 3. Substring containment — only if the shorter string is at least 75% the
+      //    length of the longer one, preventing "client" (6) matching
+      //    "showclientonthisblogpost" (24).
+      match = candidates.find(f => {
+        const atNorm = normalize(f.name);
+        if (atNorm.length < 4 || wfNorm.length < 4) return false;
+        const shorter = Math.min(atNorm.length, wfNorm.length);
+        const longer  = Math.max(atNorm.length, wfNorm.length);
+        if (shorter / longer < 0.75) return false;
+        return atNorm.includes(wfNorm) || wfNorm.includes(atNorm);
+      });
+      if (match) return match;
+
+      return null;
+    }
+
+    function runAutoMap() {
+      const container = document.getElementById('mappings-container');
+      container.innerHTML = '';
+
+      const editableWf = cachedWebflowFields.filter(f => f.isEditable);
+      let matched = 0, newFields = 0, skipped = 0;
+      const usedAtIds = new Set();
+
+      for (const wf of editableWf) {
+        // For Reference/MultiReference fields, auto-detect the linked connection
+        const isRefType = wf.type === 'Reference' || wf.type === 'MultiReference';
+        const refCollectionId = isRefType ? getReferenceCollectionId(wf) : '';
+        const autoLinkedConn = refCollectionId
+          ? cachedConnections.find(c => c.webflow_collection_id === refCollectionId)
+          : cachedConnections.find(c => normalize(c.name) === normalize(wf.displayName));
+        const atMatch = findMatchingAirtableField(wf, autoLinkedConn);
+
+        if (atMatch && !usedAtIds.has(atMatch.id)) {
+          // Matched — render a normal row pre-selected
+          usedAtIds.add(atMatch.id);
+          addMappingRow({
+            webflow_field_id: wf.id,
+            airtable_field_id: atMatch.id,
+            linked_connection_id: autoLinkedConn?.id || '',
+          }, 'matched');
+          matched++;
+        } else {
+          // No match — render a row with a pending new-field badge
+          const suggestedType = WF_TO_AT_TYPE_MAP[wf.type] || 'singleLineText';
+          addMappingRowWithNewField(
+            wf, wf.displayName, suggestedType,
+            autoLinkedConn?.id || '',
+            autoLinkedConn?.airtable_table_id || ''
+          );
+          newFields++;
+        }
+      }
+
+      // Show summary
+      const summary = document.getElementById('automap-summary');
+      summary.style.display = 'flex';
+      summary.className = 'automap-bar';
+      summary.innerHTML = `
+        <div class="automap-stats">
+          <span class="stat-matched">${matched} matched</span>
+          <span class="stat-new">${newFields} new field${newFields !== 1 ? 's' : ''} to create</span>
+        </div>
+        <div class="automap-actions">
+          <button type="button" class="secondary" onclick="clearAutoMap()">Clear</button>
+        </div>
+      `;
+
+      updateSaveButton();
+    }
+
+    function clearAutoMap() {
+      document.getElementById('mappings-container').innerHTML = '';
+      document.getElementById('automap-summary').style.display = 'none';
+      updateSaveButton();
+    }
+
+    // ─── Mapping Rows ─────────────────────────────────────────────
+
+    function addMappingRow(existing, status) {
+      const container = document.getElementById('mappings-container');
+      const row = document.createElement('div');
+      row.className = 'mapping-row';
+      if (status === 'matched') row.classList.add('is-matched');
+
+      // Stash linked_connection_id so handleWfFieldChange can pre-select it
+      if (existing?.linked_connection_id) {
+        row.dataset.linkedConnectionId = existing.linked_connection_id;
+      }
+
+      // Webflow fields (left side)
+      const wfOptions = cachedWebflowFields.filter(f => f.isEditable).map(f =>
+        `<option value="${f.id}" data-slug="${esc(f.slug)}" data-type="${f.type}" ${existing && existing.webflow_field_id === f.id ? 'selected' : ''}>${esc(f.displayName)} (${f.type})</option>`
+      ).join('');
+
+      // Airtable fields (right side) with "Create new field" option
+      const atOptions = cachedAirtableFields.map(f =>
+        `<option value="${f.id}" data-name="${esc(f.name)}" data-type="${f.type}" ${existing && existing.airtable_field_id === f.id ? 'selected' : ''}>${esc(f.name)} (${f.type})</option>`
+      ).join('');
+
+      // If the existing mapping is a Reference/MultiReference, pre-render the connection picker
+      const existingWfType = existing
+        ? (cachedWebflowFields.find(f => f.id === existing.webflow_field_id)?.type || existing.webflow_field_type || '')
+        : '';
+      const isRef = existingWfType === 'Reference' || existingWfType === 'MultiReference';
+      const connPickerHTML = isRef
+        ? linkedConnectionPickerHTML(existing?.linked_connection_id || '')
+        : '';
+
+      row.innerHTML = `
+        <select class="wf-field" onchange="handleWfFieldChange(this)"><option value="">Webflow field...</option>${wfOptions}</select>
+        <div class="mapping-arrow">&rarr;</div>
+        <div class="at-field-container">
+          <select class="at-field" onchange="handleAtFieldChange(this)">
+            <option value="">Airtable field...</option>
+            ${atOptions}
+            <option value="__create_new__" style="color:#6366f1; font-weight:500">+ Create new field...</option>
+          </select>
+          ${connPickerHTML}
+        </div>
+        <button type="button" class="remove-btn" onclick="this.closest('.mapping-row').remove(); updateSaveButton()">&times;</button>
+      `;
+
+      container.appendChild(row);
+    }
+
+    function addMappingRowWithNewField(wfField, newFieldName, newFieldType, autoLinkedConnectionId = '', autoLinkedTableId = '') {
+      const container = document.getElementById('mappings-container');
+      const row = document.createElement('div');
+      row.className = 'mapping-row is-new-field';
+      row.dataset.pendingNewField = 'true';
+      row.dataset.newFieldName = newFieldName;
+      row.dataset.newFieldType = newFieldType;
+      if (autoLinkedConnectionId) row.dataset.linkedConnectionId = autoLinkedConnectionId;
+      if (autoLinkedTableId) row.dataset.newFieldLinkedTableId = autoLinkedTableId;
+
+      // Webflow side: locked to this field
+      const wfOptions = cachedWebflowFields.filter(f => f.isEditable).map(f =>
+        `<option value="${f.id}" data-slug="${esc(f.slug)}" data-type="${f.type}" ${f.id === wfField.id ? 'selected' : ''}>${esc(f.displayName)} (${f.type})</option>`
+      ).join('');
+
+      const typeLabel = AT_TYPE_LABELS[newFieldType] || newFieldType;
+      const isRefType = wfField.type === 'Reference' || wfField.type === 'MultiReference';
+      const connPickerHtml = isRefType ? linkedConnectionPickerHTML(autoLinkedConnectionId) : '';
+
+      row.innerHTML = `
+        <select class="wf-field" onchange="handleWfFieldChange(this)"><option value="">Webflow field...</option>${wfOptions}</select>
+        <div class="mapping-arrow">&rarr;</div>
+        <div class="at-field-container">
+          <div class="at-new-badge">
+            <span class="new-tag">NEW</span>
+            <span class="new-field-name">${esc(newFieldName)}</span>
+            <span class="new-field-type">${esc(typeLabel)}</span>
+          </div>
+          ${buildNewFieldFormHTML(newFieldName, newFieldType, autoLinkedTableId)}
+          ${connPickerHtml}
+        </div>
+        <button type="button" class="remove-btn" onclick="this.closest('.mapping-row').remove(); updateSaveButton()">&times;</button>
+      `;
+
+      container.appendChild(row);
+    }
+
+    // Returns the HTML string for the inline new-field form.
+    // preLinkedTableId: pre-selected table ID for multipleRecordLinks field type.
+    function buildNewFieldFormHTML(fieldName, fieldType, preLinkedTableId = '') {
+      const typeOptions = Object.entries(AT_TYPE_LABELS).map(([val, label]) =>
+        `<option value="${val}" ${val === fieldType ? 'selected' : ''}>${label}</option>`
+      ).join('');
+
+      const tablePickerHTML = fieldType === 'multipleRecordLinks'
+        ? linkedTablePickerHTML(preLinkedTableId)
+        : '';
+
+      return `
+        <div class="new-field-form" style="margin-top:6px">
+          <div class="nf-row">
+            <input type="text" class="nf-name" value="${esc(fieldName)}" placeholder="Field name"
+                   oninput="updatePendingField(this)">
+            <select class="nf-type" onchange="onNewFieldTypeChange(this)">
+              ${typeOptions}
+            </select>
+          </div>
+          ${tablePickerHTML}
+          <div class="nf-row" style="margin-bottom:0">
+            <button type="button" class="secondary" style="font-size:12px"
+                    onclick="switchToExistingField(this)">Use existing field instead</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Returns HTML for the "linked connection" picker shown on Reference/MultiReference rows.
+    // The picker lets the user select which CMS Bridge connection manages the referenced
+    // Webflow collection — so the sync engine can resolve item IDs at runtime.
+    function linkedConnectionPickerHTML(selectedId) {
+      if (!cachedConnections.length) {
+        return `
+          <div class="linked-conn-picker" style="margin-top:5px; font-size:11px; color:#f59e0b; padding:4px 6px; background:#1c1a14; border-radius:4px; border:1px solid #78350f">
+            ⚠ No other connections found. Create a connection for the referenced collection first, then re-open this mapping.
+          </div>`;
+      }
+      const opts = cachedConnections.map(c =>
+        `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${esc(c.name)}</option>`
+      ).join('');
+      return `
+        <div class="linked-conn-picker" style="margin-top:5px">
+          <select class="ref-conn-select" style="width:100%; font-size:12px; color:#a78bfa; border-color:#4c1d95"
+                  onchange="updateLinkedConnection(this)"
+                  title="Which connection manages the referenced Webflow collection?">
+            <option value="">↗ Link to connection (for cross-collection sync)...</option>
+            ${opts}
+          </select>
+        </div>`;
+    }
+
+    // Saves the selected linked-connection ID onto the row dataset
+    function updateLinkedConnection(select) {
+      select.closest('.mapping-row').dataset.linkedConnectionId = select.value;
+    }
+
+    // Called when the user changes the Webflow field selector on any mapping row.
+    // Shows or hides the linked-connection picker based on field type.
+    function handleWfFieldChange(selectEl) {
+      const row = selectEl.closest('.mapping-row');
+      const atContainer = row.querySelector('.at-field-container');
+      const wfType = selectEl.options[selectEl.selectedIndex]?.dataset?.type || '';
+      const isRef = wfType === 'Reference' || wfType === 'MultiReference';
+
+      const existing = atContainer.querySelector('.linked-conn-picker');
+      if (existing) existing.remove();
+
+      if (isRef) {
+        atContainer.insertAdjacentHTML('beforeend',
+          linkedConnectionPickerHTML(row.dataset.linkedConnectionId || ''));
+      } else {
+        row.dataset.linkedConnectionId = '';
+      }
+    }
+
+    function linkedTablePickerHTML(selectedId) {
+      if (!cachedAllAirtableTables.length) return '';
+      const opts = cachedAllAirtableTables.map(t =>
+        `<option value="${t.id}" ${t.id === selectedId ? 'selected' : ''}>${esc(t.name)}</option>`
+      ).join('');
+      return `
+        <div class="nf-row">
+          <select class="nf-linked-table" style="flex:1" onchange="updatePendingField(this)">
+            <option value="">Link to table... (required)</option>
+            ${opts}
+          </select>
+        </div>
+      `;
+    }
+
+    // Called when the type dropdown changes inside a new-field form
+    function onNewFieldTypeChange(typeSelect) {
+      const form = typeSelect.closest('.new-field-form');
+      const row = form.closest('.mapping-row');
+
+      // Toggle the linked-table picker in/out
+      const existingPicker = form.querySelector('.nf-linked-table')?.closest('.nf-row');
+      if (typeSelect.value === 'multipleRecordLinks') {
+        if (!existingPicker) {
+          const tableRow = document.createElement('div');
+          tableRow.innerHTML = linkedTablePickerHTML();
+          // Insert after the first nf-row (name+type row)
+          const firstRow = form.querySelector('.nf-row');
+          firstRow.insertAdjacentHTML('afterend', linkedTablePickerHTML());
+        }
+      } else {
+        if (existingPicker) existingPicker.remove();
+        row.dataset.newFieldLinkedTableId = '';
+      }
+
+      updatePendingField(typeSelect);
+    }
+
+    function updatePendingField(el) {
+      const row = el.closest('.mapping-row');
+      const form = row.querySelector('.new-field-form');
+      const nameInput = form?.querySelector('.nf-name');
+      const typeSelect = form?.querySelector('.nf-type');
+      const linkedTableSelect = form?.querySelector('.nf-linked-table');
+      const badge = row.querySelector('.at-new-badge');
+
+      if (nameInput) row.dataset.newFieldName = nameInput.value;
+      if (typeSelect) row.dataset.newFieldType = typeSelect.value;
+      if (linkedTableSelect) row.dataset.newFieldLinkedTableId = linkedTableSelect.value;
+
+      if (badge) {
+        if (nameInput) badge.querySelector('.new-field-name').textContent = nameInput.value;
+        if (typeSelect) badge.querySelector('.new-field-type').textContent =
+          AT_TYPE_LABELS[typeSelect.value] || typeSelect.value;
+      }
+    }
+
+    function switchToExistingField(btn) {
+      const row = btn.closest('.mapping-row');
+      const container = row.querySelector('.at-field-container');
+      row.classList.remove('is-new-field');
+      row.dataset.pendingNewField = '';
+
+      // Rebuild as a normal dropdown
+      const atOptions = cachedAirtableFields.map(f =>
+        `<option value="${f.id}" data-name="${esc(f.name)}" data-type="${f.type}">${esc(f.name)} (${f.type})</option>`
+      ).join('');
+
+      container.innerHTML = `
+        <select class="at-field" onchange="handleAtFieldChange(this)">
+          <option value="">Airtable field...</option>
+          ${atOptions}
+          <option value="__create_new__" style="color:#6366f1; font-weight:500">+ Create new field...</option>
+        </select>
+      `;
+      updateSaveButton();
+    }
+
+    function handleAtFieldChange(selectEl) {
+      const container = selectEl.closest('.at-field-container');
+      const row = selectEl.closest('.mapping-row');
+
+      // Remove any existing create form
+      const existingForm = container.querySelector('.new-field-form');
+      if (existingForm) existingForm.remove();
+
+      row.classList.remove('is-new-field', 'is-matched');
+      row.dataset.pendingNewField = '';
+
+      if (selectEl.value !== '__create_new__') {
+        updateSaveButton();
+        return;
+      }
+
+      // Get the Webflow field type from the same row to suggest a compatible AT type
+      const wfSelect = row.querySelector('.wf-field');
+      const wfType = wfSelect.options[wfSelect.selectedIndex]?.dataset?.type || '';
+      const suggestedType = WF_TO_AT_TYPE_MAP[wfType] || 'singleLineText';
+      const suggestedName = wfSelect.options[wfSelect.selectedIndex]?.textContent?.replace(/\s*\(.*\)$/, '') || '';
+
+      // Convert to pending new field
+      row.classList.add('is-new-field');
+      row.dataset.pendingNewField = 'true';
+      row.dataset.newFieldName = suggestedName;
+      row.dataset.newFieldType = suggestedType;
+
+      const typeLabel = AT_TYPE_LABELS[suggestedType] || suggestedType;
+
+      container.innerHTML = `
+        <div class="at-new-badge">
+          <span class="new-tag">NEW</span>
+          <span class="new-field-name">${esc(suggestedName)}</span>
+          <span class="new-field-type">${esc(typeLabel)}</span>
+        </div>
+        ${buildNewFieldFormHTML(suggestedName, suggestedType)}
+      `;
+      updateSaveButton();
+    }
+
+    // ─── Save Button State ────────────────────────────────────────
+
+    function countPendingNewFields() {
+      return document.querySelectorAll('#mappings-container .mapping-row[data-pending-new-field="true"]').length;
+    }
+
+    function updateSaveButton() {
+      const btn = document.getElementById('save-mappings-btn');
+      const pending = countPendingNewFields();
+      if (pending > 0) {
+        btn.textContent = `Approve & Create ${pending} Field${pending > 1 ? 's' : ''}, Save`;
+        btn.className = 'success';
+      } else {
+        btn.textContent = 'Save Mappings';
+        btn.className = '';
+      }
+    }
+
+    // ─── Approve & Save ───────────────────────────────────────────
+
+    async function approveAndSaveMappings() {
+      const btn = document.getElementById('save-mappings-btn');
+      const pendingRows = document.querySelectorAll('#mappings-container .mapping-row[data-pending-new-field="true"]');
+
+      if (pendingRows.length > 0) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="loading"></span>Creating ${pendingRows.length} field${pendingRows.length > 1 ? 's' : ''}...`;
+
+        let created = 0;
+        let failed = 0;
+
+        for (const row of pendingRows) {
+          const name = row.dataset.newFieldName?.trim();
+          const type = row.dataset.newFieldType;
+
+          if (!name) {
+            row.remove();
+            continue;
+          }
+
+          try {
+            const linkedTableId = row.dataset.newFieldLinkedTableId?.trim() || '';
+            if (type === 'multipleRecordLinks' && !linkedTableId) {
+              showToast(`"${name}": choose a target table for the linked record field`, 'error');
+              failed++;
+              continue;
+            }
+
+            const fieldPayload = { name, type, options: undefined };
+            if (type === 'multipleRecordLinks') {
+              fieldPayload.options = { linkedTableId };
+            }
+
+            const res = await fetch(
+              `${API}/discover/airtable/bases/${currentMappingConnection.airtable_base_id}/tables/${currentMappingConnection.airtable_table_id}/fields`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(fieldPayload)
+              }
+            );
+
+            if (!res.ok) {
+              const errData = await res.json();
+              const errType = errData?.error?.type || errData?.error || '';
+
+              // Graceful recovery: field already exists — find it and reuse it
+              if (errType === 'DUPLICATE_OR_EMPTY_FIELD_NAME' || String(errType).includes('DUPLICATE')) {
+                const existing = cachedAirtableFields.find(
+                  f => normalize(f.name) === normalize(name)
+                );
+                if (existing) {
+                  // Treat as a successful match using the existing field
+                  const dupContainer = row.querySelector('.at-field-container');
+                  const dupAtOptions = cachedAirtableFields.map(f =>
+                    `<option value="${f.id}" data-name="${esc(f.name)}" data-type="${f.type}" ${f.id === existing.id ? 'selected' : ''}>${esc(f.name)} (${f.type})</option>`
+                  ).join('');
+                  const dupWfSel = row.querySelector('.wf-field');
+                  const dupWfType = dupWfSel?.options[dupWfSel.selectedIndex]?.dataset?.type || '';
+                  const isDupRef = dupWfType === 'Reference' || dupWfType === 'MultiReference';
+                  const dupLinkedId = row.dataset.linkedConnectionId || '';
+                  dupContainer.innerHTML = `
+                    <select class="at-field" onchange="handleAtFieldChange(this)">
+                      <option value="">Airtable field...</option>
+                      ${dupAtOptions}
+                      <option value="__create_new__" style="color:#6366f1; font-weight:500">+ Create new field...</option>
+                    </select>
+                    ${isDupRef ? linkedConnectionPickerHTML(dupLinkedId) : ''}
+                  `;
+                  row.classList.remove('is-new-field');
+                  row.classList.add('is-matched');
+                  row.dataset.pendingNewField = '';
+                  created++;
+                  showToast(`"${name}" already existed — linked to existing field`, 'success');
+                  continue;
+                }
+              }
+              throw new Error(errData?.error?.message || errData?.error || 'Failed');
+            }
+
+            const { field } = await res.json();
+            cachedAirtableFields.push(field);
+
+            // Convert this row from pending to a normal matched row
+            const atContainer = row.querySelector('.at-field-container');
+            const atOptions = cachedAirtableFields.map(f =>
+              `<option value="${f.id}" data-name="${esc(f.name)}" data-type="${f.type}" ${f.id === field.id ? 'selected' : ''}>${esc(f.name)} (${f.type})</option>`
+            ).join('');
+
+            // Preserve linked connection picker if this is a Reference/MultiReference field
+            const wfSelect2 = row.querySelector('.wf-field');
+            const wfType2 = wfSelect2?.options[wfSelect2.selectedIndex]?.dataset?.type || '';
+            const isRef2 = wfType2 === 'Reference' || wfType2 === 'MultiReference';
+            const linkedId2 = row.dataset.linkedConnectionId || '';
+
+            atContainer.innerHTML = `
+              <select class="at-field" onchange="handleAtFieldChange(this)">
+                <option value="">Airtable field...</option>
+                ${atOptions}
+                <option value="__create_new__" style="color:#6366f1; font-weight:500">+ Create new field...</option>
+              </select>
+              ${isRef2 ? linkedConnectionPickerHTML(linkedId2) : ''}
+            `;
+
+            row.classList.remove('is-new-field');
+            row.classList.add('is-matched');
+            row.dataset.pendingNewField = '';
+            created++;
+          } catch (err) {
+            showToast(`Failed to create "${name}": ${err.message}`, 'error');
+            failed++;
+          }
+        }
+
+        if (created > 0) {
+          showToast(`${created} field${created > 1 ? 's' : ''} created in Airtable`, 'success');
+        }
+
+        btn.disabled = false;
+        updateSaveButton();
+
+        if (failed > 0) {
+          return; // Don't save if some fields failed — let user fix
+        }
+      }
+
+      try {
+        await ensureConnectionMetadata();
+      } catch (err) {
+        showToast(err.message, 'error');
+        return;
+      }
+
+      // Now save all mappings
+      const rows = document.querySelectorAll('#mappings-container .mapping-row');
+      const mappings = [];
+
+      for (const row of rows) {
+        const wfSelect = row.querySelector('.wf-field');
+        const atSelect = row.querySelector('.at-field');
+        if (!atSelect || !atSelect.value || atSelect.value === '__create_new__' || !wfSelect.value) continue;
+
+        const atOption = atSelect.options[atSelect.selectedIndex];
+        const wfOption = wfSelect.options[wfSelect.selectedIndex];
+
+        const wfType = wfOption.dataset.type || '';
+        const isRefField = wfType === 'Reference' || wfType === 'MultiReference';
+        const linkedConnectionId = isRefField ? (row.dataset.linkedConnectionId || '') : '';
+
+        mappings.push({
+          airtable_field_id: atSelect.value,
+          airtable_field_name: atOption.dataset.name,
+          airtable_field_type: atOption.dataset.type,
+          webflow_field_id: wfSelect.value,
+          webflow_field_slug: wfOption.dataset.slug,
+          webflow_field_type: wfType,
+          is_name_field: wfOption.dataset.slug === 'name',
+          is_slug_field: wfOption.dataset.slug === 'slug',
+          ...(linkedConnectionId ? { linked_connection_id: linkedConnectionId } : {}),
+        });
+      }
+
+      try {
+        const res = await fetch(`${API}/connections/${currentMappingConnectionId}/mappings`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mappings })
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        showToast(`${mappings.length} mapping${mappings.length !== 1 ? 's' : ''} saved`, 'success');
+        closeMappingModal();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function closeMappingModal() {
+      document.getElementById('mapping-modal').classList.remove('active');
+      document.getElementById('automap-summary').style.display = 'none';
+      currentMappingConnectionId = null;
+      currentMappingConnection = null;
+    }
+
+    // ─── Sync ────────────────────────────────────────────────────
+
+    async function triggerSync(connectionId, direction, btn, options = {}) {
+      const originalLabel = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span>Syncing...';
+
+      try {
+        const res = await fetch(`${API}/sync/${connectionId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ direction, force: options.force === true })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error);
+
+        const s = data.sync;
+        const errors = s.errors || [];
+        const totalFetched = s.records_processed + (s.records_skipped || 0);
+        const syncLabel = options.force ? 'Force re-sync' : 'Sync';
+        let msg = `${syncLabel} ${s.status}: +${s.records_created} created, ~${s.records_updated} updated, −${s.records_deleted} deleted`;
+        if (totalFetched > s.records_processed && s.records_processed >= 0) {
+          msg += ` (${totalFetched - s.records_processed} unchanged, skipped)`;
+        }
+        if (s.records_failed) {
+          msg += `, ✕${s.records_failed} failed`;
+          if (errors.length) {
+            // Surface the first error message so the user sees it without opening logs
+            const first = errors[0];
+            msg += ` — ${first.message}`;
+            if (errors.length > 1) msg += ` (+${errors.length - 1} more, see Logs)`;
+          }
+        }
+        showToast(msg, s.status === 'completed' ? 'success' : s.status === 'partial' ? 'warning' : 'error');
+        loadConnections();
+      } catch (err) {
+        showToast(`Sync failed: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalLabel;
+      }
+    }
+
+    // ─── Logs ────────────────────────────────────────────────────
+
+    function renderLogEntry(l) {
+      const statusClass = l.status === 'completed' ? 'active'
+                        : l.status === 'failed'    ? 'inactive'
+                        : l.status === 'partial'   ? 'partial'
+                        : 'at-to-wf';
+
+      const dirLabel = l.direction === 'airtable_to_webflow' ? 'AT → WF' : 'WF → AT';
+
+      // Duration
+      let durationStr = '';
+      if (l.completed_at && l.started_at) {
+        const ms = new Date(l.completed_at) - new Date(l.started_at);
+        durationStr = ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
+      }
+
+      // Error details section
+      const errors = l.errors || [];
+      let errorsHTML = '';
+      if (errors.length) {
+        const errorItems = errors.map(e => `
+          <div class="error-item">
+            <code class="error-record">${esc(e.record_id || '—')}</code>
+            ${e.field ? `<span class="error-field">${esc(e.field)}</span>` : ''}
+            <span class="error-msg">${esc(e.message)}</span>
+          </div>
+        `).join('');
+        errorsHTML = `
+          <details class="log-errors">
+            <summary>${errors.length} error${errors.length !== 1 ? 's' : ''} — click to expand</summary>
+            <div class="error-list">${errorItems}</div>
+          </details>`;
+      }
+
+      return `
+        <div class="log-entry">
+          <div class="log-header">
+            <div class="log-meta">
+              <span class="badge ${statusClass}">${l.status}</span>
+              <span class="log-direction">${dirLabel}</span>
+              <span style="color:var(--text-dim)">${new Date(l.started_at).toLocaleString()}</span>
+              ${durationStr ? `<span class="log-duration">⏱ ${esc(durationStr)}</span>` : ''}
+            </div>
+            <div class="log-stats">
+              <span class="created" title="Created">+${l.records_created} created</span>
+              <span class="updated" title="Updated">~${l.records_updated} updated</span>
+              <span class="deleted" title="Deleted">−${l.records_deleted} deleted</span>
+              ${l.records_failed ? `<span class="failed" title="Failed">✕${l.records_failed} failed</span>` : ''}
+            </div>
+          </div>
+          ${errorsHTML}
+        </div>`;
+    }
+
+    async function openLogsModal(connectionId) {
+      const [connRes, logsRes] = await Promise.all([
+        fetch(`${API}/connections/${connectionId}`),
+        fetch(`${API}/connections/${connectionId}/logs?limit=20`)
+      ]);
+      const { connection } = await connRes.json();
+      const { logs } = await logsRes.json();
+
+      document.getElementById('logs-conn-name').textContent = connection.name;
+
+      const container = document.getElementById('logs-container');
+      if (!logs.length) {
+        container.innerHTML = '<p style="color:var(--text-dim); text-align:center; padding:24px">No sync history yet</p>';
+      } else {
+        container.innerHTML = logs.map(l => renderLogEntry(l)).join('');
+      }
+
+      document.getElementById('logs-modal').classList.add('active');
+    }
+
+    function closeLogsModal() {
+      document.getElementById('logs-modal').classList.remove('active');
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────
+
+    function esc(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      const duration = (type === 'error' || type === 'warning') ? 7000 : 4000;
+      setTimeout(() => toast.remove(), duration);
+    }
+
+    init();
+  </script>
+</body>
+</html>
